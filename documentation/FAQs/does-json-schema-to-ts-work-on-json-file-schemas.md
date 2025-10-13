@@ -40,7 +40,7 @@ type Dog = FromSchema<typeof dogSchema>;
 // => Will work 🙌
 ```
 
-It is technically code duplication, BUT TS will throw an errow if the narrow and widened types don't sufficiently overlap, which allows for partial type safety (roughly, everything but the object "leafs"). In particular, this will work well on object properties names, as object keys are not widened by default.
+It is technically code duplication, BUT TS will throw an error if the narrow and widened types don't sufficiently overlap, which allows for partial type safety (roughly, everything but the object "leafs"). In particular, this will work well on object properties names, as object keys are not widened by default.
 
 ```typescript
 import { FromSchema } from "json-schema-to-ts";
