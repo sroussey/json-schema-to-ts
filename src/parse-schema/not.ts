@@ -40,14 +40,13 @@ type AllTypes = M.Union<
 export type ParseNotSchema<
   NOT_SCHEMA extends NotSchema,
   OPTIONS extends ParseSchemaOptions,
-  PARSED_REST_SCHEMA = ParseSchema<Omit<NOT_SCHEMA, "not">, OPTIONS>,
+  // Pre-compute the rest schema once
+  REST_SCHEMA extends JSONSchema = Omit<NOT_SCHEMA, "not">,
+  PARSED_REST_SCHEMA = ParseSchema<REST_SCHEMA, OPTIONS>,
   EXCLUSION = M.$Exclude<
     PARSED_REST_SCHEMA extends M.AnyType
       ? M.$Intersect<AllTypes, PARSED_REST_SCHEMA>
       : PARSED_REST_SCHEMA,
-    ParseSchema<
-      MergeSubSchema<Omit<NOT_SCHEMA, "not">, NOT_SCHEMA["not"]>,
-      OPTIONS
-    >
+    ParseSchema<MergeSubSchema<REST_SCHEMA, NOT_SCHEMA["not"]>, OPTIONS>
   >,
 > = EXCLUSION extends M.Never ? PARSED_REST_SCHEMA : EXCLUSION;

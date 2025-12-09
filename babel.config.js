@@ -6,6 +6,7 @@ const defaultPresets = [
 ];
 
 module.exports = {
+  presets: defaultPresets,
   env: {
     cjs: {
       presets: [["@babel/preset-env", { modules: "cjs" }], ...defaultPresets],

@@ -29,45 +29,49 @@ export type AnyOfSchema = JSONSchema &
 export type ParseAnyOfSchema<
   ANY_OF_SCHEMA extends AnyOfSchema,
   OPTIONS extends ParseSchemaOptions,
+  // Pre-compute the root schema parse once, reuse in recursion
+  ROOT_WITHOUT_ANYOF extends JSONSchema = Omit<ANY_OF_SCHEMA, "anyOf">,
+  PARSED_ROOT = ParseSchema<ROOT_WITHOUT_ANYOF, OPTIONS>,
 > = M.$Union<
-  RecurseOnAnyOfSchema<ANY_OF_SCHEMA["anyOf"], ANY_OF_SCHEMA, OPTIONS>
+  RecurseOnAnyOfSchema<
+    ANY_OF_SCHEMA["anyOf"],
+    ROOT_WITHOUT_ANYOF,
+    OPTIONS,
+    PARSED_ROOT
+  >
 >;
 
 /**
  * Recursively parses a tuple of JSON schemas to the union of its parsed meta-types (merged with root schema).
  * @param SUB_SCHEMAS JSONSchema[]
- * @param ROOT_ANY_OF_SCHEMA Root JSONSchema (schema union)
+ * @param ROOT_WITHOUT_ANYOF Root JSONSchema without anyOf key
  * @param OPTIONS Parsing options
+ * @param PARSED_ROOT Pre-computed parsed root schema (hoisted for performance)
+ * @param RESULT Accumulated result
  * @returns Meta-type
  */
 type RecurseOnAnyOfSchema<
   SUB_SCHEMAS extends readonly JSONSchema[],
-  ROOT_ANY_OF_SCHEMA extends AnyOfSchema,
+  ROOT_WITHOUT_ANYOF extends JSONSchema,
   OPTIONS extends ParseSchemaOptions,
+  PARSED_ROOT,
   RESULT = never,
 > = SUB_SCHEMAS extends readonly [
-  infer SUB_SCHEMAS_HEAD,
-  ...infer SUB_SCHEMAS_TAIL,
+  infer SUB_SCHEMAS_HEAD extends JSONSchema,
+  ...infer SUB_SCHEMAS_TAIL extends readonly JSONSchema[],
 ]
-  ? // TODO increase TS version and use "extends" in Array https://devblogs.microsoft.com/typescript/announcing-typescript-4-8/#improved-inference-for-infer-types-in-template-string-types
-    SUB_SCHEMAS_HEAD extends JSONSchema
-    ? SUB_SCHEMAS_TAIL extends readonly JSONSchema[]
-      ? RecurseOnAnyOfSchema<
-          SUB_SCHEMAS_TAIL,
-          ROOT_ANY_OF_SCHEMA,
-          OPTIONS,
-          | RESULT
-          | M.$Intersect<
-              ParseSchema<Omit<ROOT_ANY_OF_SCHEMA, "anyOf">, OPTIONS>,
-              ParseSchema<
-                MergeSubSchema<
-                  Omit<ROOT_ANY_OF_SCHEMA, "anyOf">,
-                  SUB_SCHEMAS_HEAD
-                >,
-                OPTIONS
-              >
-            >
+  ? RecurseOnAnyOfSchema<
+      SUB_SCHEMAS_TAIL,
+      ROOT_WITHOUT_ANYOF,
+      OPTIONS,
+      PARSED_ROOT,
+      | RESULT
+      | M.$Intersect<
+          PARSED_ROOT,
+          ParseSchema<
+            MergeSubSchema<ROOT_WITHOUT_ANYOF, SUB_SCHEMAS_HEAD>,
+            OPTIONS
+          >
         >
-      : never
-    : never
+    >
   : RESULT;

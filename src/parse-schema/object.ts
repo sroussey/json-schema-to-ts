@@ -29,26 +29,27 @@ export type ObjectSchema = JSONSchema & Readonly<{ type: "object" }>;
 export type ParseObjectSchema<
   OBJECT_SCHEMA extends ObjectSchema,
   OPTIONS extends ParseSchemaOptions,
-> = OBJECT_SCHEMA extends Readonly<{
-  properties: Readonly<Record<string, JSONSchema>>;
-}>
-  ? M.$Object<
-      {
-        [KEY in keyof OBJECT_SCHEMA["properties"]]: ParseSchema<
-          OBJECT_SCHEMA["properties"][KEY],
-          OPTIONS
-        >;
-      },
-      GetRequired<OBJECT_SCHEMA, OPTIONS>,
-      GetOpenProps<OBJECT_SCHEMA, OPTIONS>,
-      GetClosedOnResolve<OBJECT_SCHEMA>
-    >
-  : M.$Object<
-      {},
-      GetRequired<OBJECT_SCHEMA, OPTIONS>,
-      GetOpenProps<OBJECT_SCHEMA, OPTIONS>,
-      GetClosedOnResolve<OBJECT_SCHEMA>
-    >;
+> =
+  OBJECT_SCHEMA extends Readonly<{
+    properties: Readonly<Record<string, JSONSchema>>;
+  }>
+    ? M.$Object<
+        {
+          [KEY in keyof OBJECT_SCHEMA["properties"]]: ParseSchema<
+            OBJECT_SCHEMA["properties"][KEY],
+            OPTIONS
+          >;
+        },
+        GetRequired<OBJECT_SCHEMA, OPTIONS>,
+        GetOpenProps<OBJECT_SCHEMA, OPTIONS>,
+        GetClosedOnResolve<OBJECT_SCHEMA>
+      >
+    : M.$Object<
+        {},
+        GetRequired<OBJECT_SCHEMA, OPTIONS>,
+        GetOpenProps<OBJECT_SCHEMA, OPTIONS>,
+        GetClosedOnResolve<OBJECT_SCHEMA>
+      >;
 
 /**
  * Extracts the required keys of an object JSON schema
@@ -86,21 +87,22 @@ type GetRequired<
 type GetOpenProps<
   OBJECT_SCHEMA extends ObjectSchema,
   OPTIONS extends ParseSchemaOptions,
-> = OBJECT_SCHEMA extends Readonly<{ additionalProperties: JSONSchema }>
-  ? OBJECT_SCHEMA extends Readonly<{
-      patternProperties: Record<string, JSONSchema>;
-    }>
-    ? AdditionalAndPatternProps<
-        OBJECT_SCHEMA["additionalProperties"],
-        OBJECT_SCHEMA["patternProperties"],
-        OPTIONS
-      >
-    : ParseSchema<OBJECT_SCHEMA["additionalProperties"], OPTIONS>
-  : OBJECT_SCHEMA extends Readonly<{
+> =
+  OBJECT_SCHEMA extends Readonly<{ additionalProperties: JSONSchema }>
+    ? OBJECT_SCHEMA extends Readonly<{
         patternProperties: Record<string, JSONSchema>;
       }>
-    ? PatternProps<OBJECT_SCHEMA["patternProperties"], OPTIONS>
-    : M.Any;
+      ? AdditionalAndPatternProps<
+          OBJECT_SCHEMA["additionalProperties"],
+          OBJECT_SCHEMA["patternProperties"],
+          OPTIONS
+        >
+      : ParseSchema<OBJECT_SCHEMA["additionalProperties"], OPTIONS>
+    : OBJECT_SCHEMA extends Readonly<{
+          patternProperties: Record<string, JSONSchema>;
+        }>
+      ? PatternProps<OBJECT_SCHEMA["patternProperties"], OPTIONS>
+      : M.Any;
 
 /**
  * Extracts and parses the unevaluated properties (if any exists) of an object JSON schema

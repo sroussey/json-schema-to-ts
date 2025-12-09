@@ -29,47 +29,43 @@ export type AllOfSchema = JSONSchema &
 export type ParseAllOfSchema<
   ALL_OF_SCHEMA extends AllOfSchema,
   OPTIONS extends ParseSchemaOptions,
+  // Pre-compute the root schema without allOf once
+  ROOT_WITHOUT_ALLOF extends JSONSchema = Omit<ALL_OF_SCHEMA, "allOf">,
+  PARSED_ROOT = ParseSchema<ROOT_WITHOUT_ALLOF, OPTIONS>,
 > = RecurseOnAllOfSchema<
   ALL_OF_SCHEMA["allOf"],
-  ALL_OF_SCHEMA,
+  ROOT_WITHOUT_ALLOF,
   OPTIONS,
-  ParseSchema<Omit<ALL_OF_SCHEMA, "allOf">, OPTIONS>
+  PARSED_ROOT
 >;
 
 /**
  * Recursively parses a tuple of JSON schemas to the intersection of its parsed meta-types (merged with root schema).
  * @param SUB_SCHEMAS JSONSchema[]
- * @param ROOT_ALL_OF_SCHEMA Root JSONSchema (schema union)
+ * @param ROOT_WITHOUT_ALLOF Root JSONSchema without allOf key
  * @param OPTIONS Parsing options
+ * @param PARSED_ROOT_ALL_OF_SCHEMA Accumulated intersection result
  * @returns Meta-type
  */
 type RecurseOnAllOfSchema<
   SUB_SCHEMAS extends readonly JSONSchema[],
-  ROOT_ALL_OF_SCHEMA extends AllOfSchema,
+  ROOT_WITHOUT_ALLOF extends JSONSchema,
   OPTIONS extends ParseSchemaOptions,
   PARSED_ROOT_ALL_OF_SCHEMA,
 > = SUB_SCHEMAS extends readonly [
-  infer SUB_SCHEMAS_HEAD,
-  ...infer SUB_SCHEMAS_TAIL,
+  infer SUB_SCHEMAS_HEAD extends JSONSchema,
+  ...infer SUB_SCHEMAS_TAIL extends readonly JSONSchema[],
 ]
-  ? // TODO increase TS version and use "extends" in Array https://devblogs.microsoft.com/typescript/announcing-typescript-4-8/#improved-inference-for-infer-types-in-template-string-types
-    SUB_SCHEMAS_HEAD extends JSONSchema
-    ? SUB_SCHEMAS_TAIL extends readonly JSONSchema[]
-      ? RecurseOnAllOfSchema<
-          SUB_SCHEMAS_TAIL,
-          ROOT_ALL_OF_SCHEMA,
-          OPTIONS,
-          M.$Intersect<
-            ParseSchema<
-              MergeSubSchema<
-                Omit<ROOT_ALL_OF_SCHEMA, "allOf">,
-                SUB_SCHEMAS_HEAD
-              >,
-              OPTIONS
-            >,
-            PARSED_ROOT_ALL_OF_SCHEMA
-          >
-        >
-      : never
-    : never
+  ? RecurseOnAllOfSchema<
+      SUB_SCHEMAS_TAIL,
+      ROOT_WITHOUT_ALLOF,
+      OPTIONS,
+      M.$Intersect<
+        ParseSchema<
+          MergeSubSchema<ROOT_WITHOUT_ALLOF, SUB_SCHEMAS_HEAD>,
+          OPTIONS
+        >,
+        PARSED_ROOT_ALL_OF_SCHEMA
+      >
+    >
   : PARSED_ROOT_ALL_OF_SCHEMA;

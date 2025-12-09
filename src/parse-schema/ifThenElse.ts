@@ -42,6 +42,7 @@ export type IfThenElseSchema = JSONSchema & {
 export type ParseIfThenElseSchema<
   IF_THEN_ELSE_SCHEMA extends IfThenElseSchema,
   OPTIONS extends ParseSchemaOptions,
+  // Pre-compute common values once
   REST_SCHEMA extends JSONSchema = Omit<
     IF_THEN_ELSE_SCHEMA,
     "if" | "then" | "else"
@@ -50,31 +51,29 @@ export type ParseIfThenElseSchema<
     REST_SCHEMA,
     IF_THEN_ELSE_SCHEMA["if"]
   >,
+  // Hoist these parsed schemas - they're used multiple times
+  PARSED_REST = ParseSchema<REST_SCHEMA, OPTIONS>,
+  PARSED_IF = ParseSchema<IF_SCHEMA, OPTIONS>,
+  // Now compute then/else using pre-computed values
   PARSED_THEN_SCHEMA = IF_THEN_ELSE_SCHEMA extends { then: JSONSchema }
     ? M.$Intersect<
-        ParseSchema<IF_SCHEMA, OPTIONS>,
+        PARSED_IF,
         ParseSchema<
           MergeSubSchema<REST_SCHEMA, IF_THEN_ELSE_SCHEMA["then"]>,
           OPTIONS
         >
       >
-    : ParseSchema<IF_SCHEMA, OPTIONS>,
+    : PARSED_IF,
   PARSED_ELSE_SCHEMA = IF_THEN_ELSE_SCHEMA extends { else: JSONSchema }
     ? M.$Intersect<
-        M.$Exclude<
-          ParseSchema<REST_SCHEMA, OPTIONS>,
-          ParseSchema<IF_SCHEMA, OPTIONS>
-        >,
+        M.$Exclude<PARSED_REST, PARSED_IF>,
         ParseSchema<
           MergeSubSchema<REST_SCHEMA, IF_THEN_ELSE_SCHEMA["else"]>,
           OPTIONS
         >
       >
-    : M.$Exclude<
-        ParseSchema<REST_SCHEMA, OPTIONS>,
-        ParseSchema<IF_SCHEMA, OPTIONS>
-      >,
+    : M.$Exclude<PARSED_REST, PARSED_IF>,
 > = M.$Intersect<
   M.$Union<PARSED_THEN_SCHEMA | PARSED_ELSE_SCHEMA>,
-  ParseSchema<REST_SCHEMA, OPTIONS>
+  PARSED_REST
 >;

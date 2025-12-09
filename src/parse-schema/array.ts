@@ -141,52 +141,56 @@ type ApplyMinMax<
   HAS_ENCOUNTERED_MAX extends boolean = false,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   INITIAL_PARSED_ITEM_SCHEMAS extends any[] = RECURSED_PARSED_ITEM_SCHEMAS,
-> = And<
-  Not<DoesExtend<MIN, RECURSED_PARSED_ITEM_SCHEMAS["length"]>>,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  DoesExtend<RECURSED_PARSED_ITEM_SCHEMAS, [any, ...any[]]>
-> extends true
-  ? RECURSED_PARSED_ITEM_SCHEMAS extends [
-      ...infer RECURSED_PARSED_ITEM_SCHEMAS_BODY,
-      unknown,
-    ]
-    ? ApplyMinMax<
-        RECURSED_PARSED_ITEM_SCHEMAS_BODY,
-        MIN,
-        MAX,
-        RECURSED_PARSED_ITEM_SCHEMAS["length"] extends MAX
-          ? M.$Tuple<RECURSED_PARSED_ITEM_SCHEMAS>
-          : RESULT | M.$Tuple<RECURSED_PARSED_ITEM_SCHEMAS>,
-        HAS_ENCOUNTERED_MIN extends true
-          ? true
-          : DoesExtend<MIN, RECURSED_PARSED_ITEM_SCHEMAS["length"]>,
-        HAS_ENCOUNTERED_MAX extends true
-          ? true
-          : DoesExtend<MAX, RECURSED_PARSED_ITEM_SCHEMAS["length"]>,
-        INITIAL_PARSED_ITEM_SCHEMAS
-      >
-    : never
-  : {
-      result: MAX extends undefined
-        ? RESULT | M.$Tuple<RECURSED_PARSED_ITEM_SCHEMAS>
-        : HAS_ENCOUNTERED_MAX extends true
-          ? RESULT | M.$Tuple<RECURSED_PARSED_ITEM_SCHEMAS>
-          : MAX extends RECURSED_PARSED_ITEM_SCHEMAS["length"]
+> =
+  And<
+    Not<DoesExtend<MIN, RECURSED_PARSED_ITEM_SCHEMAS["length"]>>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    DoesExtend<RECURSED_PARSED_ITEM_SCHEMAS, [any, ...any[]]>
+  > extends true
+    ? RECURSED_PARSED_ITEM_SCHEMAS extends [
+        ...infer RECURSED_PARSED_ITEM_SCHEMAS_BODY,
+        unknown,
+      ]
+      ? ApplyMinMax<
+          RECURSED_PARSED_ITEM_SCHEMAS_BODY,
+          MIN,
+          MAX,
+          RECURSED_PARSED_ITEM_SCHEMAS["length"] extends MAX
             ? M.$Tuple<RECURSED_PARSED_ITEM_SCHEMAS>
-            : IsLongerThan<Tail<RECURSED_PARSED_ITEM_SCHEMAS>, MAX> extends true
-              ? never
-              : RESULT | M.$Tuple<RECURSED_PARSED_ITEM_SCHEMAS>;
-      hasEncounteredMin: DoesExtend<
-        MIN,
-        RECURSED_PARSED_ITEM_SCHEMAS["length"]
-      >;
-      hasEncounteredMax: HAS_ENCOUNTERED_MAX extends true
-        ? true
-        : MAX extends RECURSED_PARSED_ITEM_SCHEMAS["length"]
+            : RESULT | M.$Tuple<RECURSED_PARSED_ITEM_SCHEMAS>,
+          HAS_ENCOUNTERED_MIN extends true
+            ? true
+            : DoesExtend<MIN, RECURSED_PARSED_ITEM_SCHEMAS["length"]>,
+          HAS_ENCOUNTERED_MAX extends true
+            ? true
+            : DoesExtend<MAX, RECURSED_PARSED_ITEM_SCHEMAS["length"]>,
+          INITIAL_PARSED_ITEM_SCHEMAS
+        >
+      : never
+    : {
+        result: MAX extends undefined
+          ? RESULT | M.$Tuple<RECURSED_PARSED_ITEM_SCHEMAS>
+          : HAS_ENCOUNTERED_MAX extends true
+            ? RESULT | M.$Tuple<RECURSED_PARSED_ITEM_SCHEMAS>
+            : MAX extends RECURSED_PARSED_ITEM_SCHEMAS["length"]
+              ? M.$Tuple<RECURSED_PARSED_ITEM_SCHEMAS>
+              : IsLongerThan<
+                    Tail<RECURSED_PARSED_ITEM_SCHEMAS>,
+                    MAX
+                  > extends true
+                ? never
+                : RESULT | M.$Tuple<RECURSED_PARSED_ITEM_SCHEMAS>;
+        hasEncounteredMin: DoesExtend<
+          MIN,
+          RECURSED_PARSED_ITEM_SCHEMAS["length"]
+        >;
+        hasEncounteredMax: HAS_ENCOUNTERED_MAX extends true
           ? true
-          : IsLongerThan<Tail<RECURSED_PARSED_ITEM_SCHEMAS>, MAX>;
-      completeTuple: INITIAL_PARSED_ITEM_SCHEMAS;
-    };
+          : MAX extends RECURSED_PARSED_ITEM_SCHEMAS["length"]
+            ? true
+            : IsLongerThan<Tail<RECURSED_PARSED_ITEM_SCHEMAS>, MAX>;
+        completeTuple: INITIAL_PARSED_ITEM_SCHEMAS;
+      };
 
 /**
  * Returns `true` if the provided tuple has a length higher than or equal to the provided length, returns `false` otherwise (or if `LENGTH` is `undefined`).
